@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: land-registry-postgres
+    environment:
+      POSTGRES_DB: land_registry
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - land-registry-network
+
+  ipfs:
+    image: ipfs/go-ipfs:latest
+    container_name: land-registry-ipfs
+    ports:
+      - "4001:4001"
+      - "5001:5001"
+      - "8080:8080"
+    volumes:
+      - ipfs_data:/data/ipfs
+    networks:
+      - land-registry-network
+
+volumes:
+  postgres_data:
+  ipfs_data:
+
+networks:
+  land-registry-network:
+    driver: bridge

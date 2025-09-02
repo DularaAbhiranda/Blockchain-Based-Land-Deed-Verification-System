@@ -1,0 +1,253 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: land-registry-postgres
+    environment:
+      POSTGRES_DB: land_registry
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - land-registry-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # IPFS Node
+  ipfs:
+    image: ipfs/kubo:latest
+    container_name: land-registry-ipfs
+    ports:
+      - "4001:4001"  # P2P port
+      - "5001:5001"  # API port
+      - "8080:8080"  # Gateway port
+    volumes:
+      - ipfs_data:/data/ipfs
+      - ipfs_staging:/export
+    networks:
+      - land-registry-network
+    command: ipfs daemon --migrate=true --agent-version-suffix=docker
+    healthcheck:
+      test: ["CMD", "ipfs", "dag", "stat", "/ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Hyperledger Fabric CA
+  fabric-ca:
+    image: hyperledger/fabric-ca:1.5.5
+    container_name: land-registry-fabric-ca
+    environment:
+      FABRIC_CA_HOME: /etc/hyperledger/fabric-ca-server
+      FABRIC_CA_SERVER_CA_NAME: ca-org1
+      FABRIC_CA_SERVER_TLS_ENABLED: false
+      FABRIC_CA_SERVER_PORT: 7054
+    ports:
+      - "7054:7054"
+    volumes:
+      - fabric_ca_data:/etc/hyperledger/fabric-ca-server
+      - ./fabric-network/crypto-config:/etc/hyperledger/fabric-ca-server/crypto-config
+    networks:
+      - land-registry-network
+    command: fabric-ca-server start -b admin:adminpw
+    healthcheck:
+      test: ["CMD", "fabric-ca-client", "enroll", "-u", "http://admin:adminpw@localhost:7054"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Hyperledger Fabric Orderer
+  fabric-orderer:
+    image: hyperledger/fabric-orderer:2.4.7
+    container_name: land-registry-fabric-orderer
+    environment:
+      FABRIC_LOGGING_SPEC: INFO
+      ORDERER_GENERAL_LISTENADDRESS: 0.0.0.0
+      ORDERER_GENERAL_LISTENPORT: 7050
+      ORDERER_GENERAL_LOCALMSPID: OrdererMSP
+      ORDERER_GENERAL_LOCALMSPDIR: /var/hyperledger/orderer/msp
+      ORDERER_GENERAL_TLS_ENABLED: false
+      ORDERER_GENERAL_TLS_PRIVATEKEY: /var/hyperledger/orderer/tls/server.key
+      ORDERER_GENERAL_TLS_CERTIFICATE: /var/hyperledger/orderer/tls/server.crt
+      ORDERER_GENERAL_TLS_ROOTCAS: /var/hyperledger/orderer/tls/ca.crt
+      ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE: /var/hyperledger/orderer/tls/server.crt
+      ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY: /var/hyperledger/orderer/tls/server.key
+      ORDERER_GENERAL_CLUSTER_ROOTCAS: /var/hyperledger/orderer/tls/ca.crt
+      ORDERER_GENERAL_GENESISMETHOD: file
+      ORDERER_GENERAL_GENESISFILE: /var/hyperledger/orderer/orderer.genesis.block
+      ORDERER_FILELEDGER_LOCATION: /var/hyperledger/production/orderer
+      ORDERER_KAFKA_TOPIC_REPLICATIONFACTOR: 1
+      ORDERER_KAFKA_VERBOSE: true
+      ORDERER_GENERAL_BOOTSTRAPMETHOD: file
+    ports:
+      - "7050:7050"
+    volumes:
+      - fabric_orderer_data:/var/hyperledger/production/orderer
+      - ./fabric-network/crypto-config:/var/hyperledger/crypto-config
+      - ./fabric-network/channel-artifacts:/var/hyperledger/channel-artifacts
+    networks:
+      - land-registry-network
+    depends_on:
+      - fabric-ca
+    healthcheck:
+      test: ["CMD", "orderer", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Hyperledger Fabric Peer
+  fabric-peer:
+    image: hyperledger/fabric-peer:2.4.7
+    container_name: land-registry-fabric-peer
+    environment:
+      CORE_VM_ENDPOINT: unix:///host/var/run/docker.sock
+      CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE: land-registry-network
+      CORE_LOGGING_LEVEL: INFO
+      CORE_PEER_TLS_ENABLED: false
+      CORE_PEER_GOSSIP_USELEADERELECTION: true
+      CORE_PEER_GOSSIP_ORGLEADER: false
+      CORE_PEER_PROFILE_ENABLED: true
+      CORE_PEER_ID: peer0.org1.example.com
+      CORE_PEER_ADDRESS: peer0.org1.example.com:7051
+      CORE_PEER_LISTENADDRESS: 0.0.0.0:7051
+      CORE_PEER_CHAINCODEADDRESS: peer0.org1.example.com:7052
+      CORE_PEER_CHAINCODELISTENADDRESS: 0.0.0.0:7052
+      CORE_PEER_LOCALMSPID: Org1MSP
+      CORE_PEER_MSPCONFIGPATH: /etc/hyperledger/peer/msp
+      CORE_CHAINCODE_MODE: net
+      CORE_CHAINCODE_EXECUTETIMEOUT: 300s
+      CORE_CHAINCODE_DEPLOYTIMEOUT: 300s
+      CORE_CHAINCODE_STARTUPTIMEOUT: 300s
+    ports:
+      - "7051:7051"
+      - "7052:7052"
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - fabric_peer_data:/var/hyperledger/production
+      - ./fabric-network/crypto-config:/etc/hyperledger/crypto-config
+      - ./fabric-network/chaincode:/opt/gopath/src/github.com/hyperledger/fabric/chaincode
+    networks:
+      - land-registry-network
+    depends_on:
+      - fabric-orderer
+      - fabric-ca
+    healthcheck:
+      test: ["CMD", "peer", "version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: land-registry-backend
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: land_registry
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_EXPIRES_IN: 24h
+      FABRIC_NETWORK_CONFIG_PATH: /app/fabric-network/connection.json
+      FABRIC_CHANNEL_NAME: mychannel
+      FABRIC_CHAINCODE_NAME: land-registry
+      FABRIC_WALLET_PATH: /app/fabric-network/wallet
+      IPFS_HOST: ipfs
+      IPFS_PORT: 5001
+      IPFS_PROTOCOL: http
+      UPLOAD_PATH: /app/uploads
+      MAX_FILE_SIZE: 10485760
+      BCRYPT_ROUNDS: 12
+      RATE_LIMIT_WINDOW_MS: 900000
+      RATE_LIMIT_MAX_REQUESTS: 100
+      LOG_LEVEL: info
+      LOG_FILE_PATH: /app/logs
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - ./fabric-network:/app/fabric-network
+      - backend_logs:/app/logs
+      - backend_uploads:/app/uploads
+      - node_modules_backend:/app/node_modules
+    networks:
+      - land-registry-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ipfs:
+        condition: service_healthy
+      fabric-peer:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: land-registry-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:3001/api
+      REACT_APP_IPFS_GATEWAY: http://localhost:8080/ipfs
+      REACT_APP_BLOCKCHAIN_EXPLORER: http://localhost:8080
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - node_modules_frontend:/app/node_modules
+    networks:
+      - land-registry-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+    driver: local
+  ipfs_data:
+    driver: local
+  ipfs_staging:
+    driver: local
+  fabric_ca_data:
+    driver: local
+  fabric_orderer_data:
+    driver: local
+  fabric_peer_data:
+    driver: local
+  backend_logs:
+    driver: local
+  backend_uploads:
+    driver: local
+  node_modules_backend:
+    driver: local
+  node_modules_frontend:
+    driver: local
+
+networks:
+  land-registry-network:
+    driver: bridge

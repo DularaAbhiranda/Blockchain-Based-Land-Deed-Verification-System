@@ -1,0 +1,30 @@
+{
+  "name": "blockchain-land-registry",
+  "version": "1.0.0",
+  "description": "Blockchain Land Deed Verification System",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test-setup.js",
+    "test:auth": "node test-auth.js",
+    "test:deeds": "node test-deeds.js",
+    "start": "start-dev.bat",
+    "start:linux": "./start-dev.sh"
+  },
+  "keywords": [
+    "blockchain",
+    "hyperledger-fabric",
+    "land-registry",
+    "nodejs",
+    "react"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "axios": "^1.6.0",
+    "form-data": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

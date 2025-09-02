@@ -1,0 +1,273 @@
+/* frontend/src/components/Deeds/CreateDeed.css - Create deed styles */
+.create-deed {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.create-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.create-header h1 {
+  color: #2c3e50;
+  margin: 0 0 10px 0;
+  font-size: 32px;
+  font-weight: 600;
+}
+
+.create-header p {
+  color: #6c757d;
+  margin: 0;
+  font-size: 16px;
+}
+
+.create-form-container {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  padding: 30px;
+}
+
+.create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.form-section {
+  border-bottom: 1px solid #e1e8ed;
+  padding-bottom: 30px;
+}
+
+.form-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.form-section h3 {
+  color: #2c3e50;
+  margin: 0 0 20px 0;
+  font-size: 20px;
+  font-weight: 600;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #667eea;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.form-group label::after {
+  content: '';
+}
+
+.form-group input,
+.form-group textarea {
+  padding: 12px 16px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-group input:disabled,
+.form-group textarea:disabled {
+  background: #f1f3f4;
+  cursor: not-allowed;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.file-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.file-upload label {
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.file-input-container {
+  position: relative;
+}
+
+.file-input-container input[type="file"] {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.file-input-display {
+  border: 2px dashed #e1e8ed;
+  border-radius: 8px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.file-input-display:hover {
+  border-color: #667eea;
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.file-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #28a745;
+}
+
+.file-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #6c757d;
+}
+
+.file-icon {
+  font-size: 24px;
+}
+
+.file-name {
+  font-weight: 500;
+}
+
+.file-size {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.file-help {
+  color: #6c757d;
+  font-size: 12px;
+  margin: 0;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px 20px;
+  border-radius: 8px;
+  border: 1px solid #f5c6cb;
+  text-align: center;
+  font-size: 14px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  padding-top: 20px;
+  border-top: 1px solid #e1e8ed;
+}
+
+.cancel-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover:not(:disabled) {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.cancel-button:disabled,
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .create-deed {
+    padding: 15px;
+  }
+  
+  .create-form-container {
+    padding: 20px;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .file-selected {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .file-placeholder {
+    flex-direction: column;
+    gap: 5px;
+  }
+}
