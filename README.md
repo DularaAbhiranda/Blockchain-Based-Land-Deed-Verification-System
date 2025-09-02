@@ -1,4 +1,24 @@
-# Blockchain Land Deed Verification System
+<div align="center">
+
+<h1>🗂️🔗 Blockchain Land Deed Verification System</h1>
+
+<p>A modern, PDPA-compliant, blockchain-powered web platform for secure land deed verification and management in Sri Lanka.</p>
+
+<p>
+  <a href="#-quick-start">Quick Start</a> ·
+  <a href="#-project-architecture">Architecture</a> ·
+  <a href="#-technology-stack">Tech Stack</a> ·
+  <a href="#-api-documentation">API</a> ·
+  <a href="#-deployment">Deployment</a>
+  <br/>
+  <sub>Repository: <code>DularaAbhiranda/Blockchain-Based-Land-Deed-Verification-System</code></sub>
+  <br/>
+  <sub>Frontend: React · Backend: Node/Express · DB: PostgreSQL/SQLite (dev) · Blockchain: Hyperledger Fabric · Storage: IPFS</sub>
+</p>
+
+</div>
+
+---
 
 A comprehensive blockchain-based solution for secure land deed verification and management, built with Hyperledger Fabric, Node.js, and React.js. This system implements the research proposal for "Blockchain-Based Land Deed Verification in Sri Lanka: Enhancing Transparency, Security and Compliance with PDPA".
 
@@ -19,27 +39,65 @@ A comprehensive blockchain-based solution for secure land deed verification and 
 
 ## 🚀 Quick Start
 
+Follow one of the paths below. If you do not have Docker, use the "No Docker (Dev)" path which runs with SQLite locally.
+
+### 1) Clone the Repository
+
+```bash
+git clone https://github.com/DularaAbhiranda/Blockchain-Based-Land-Deed-Verification-System.git
+cd Blockchain-Based-Land-Deed-Verification-System
+```
+
 ### Prerequisites
 - Docker Desktop (with Docker Compose)
 - Node.js 18+ (for local development)
 - Git
 
-### Option 1: Automated Setup (Recommended)
+### Option A: Automated Setup (Recommended)
 
 **Windows:**
-```bash
+   ```bash
 # Run the automated setup script
 .\start-system.bat
-```
+   ```
 
 **Linux/Mac:**
-```bash
+    ```bash
 # Make script executable and run
 chmod +x start-system.sh
 ./start-system.sh
 ```
 
-### Option 2: Manual Setup
+### Option B: No Docker (Dev) – Run Locally with SQLite
+
+This mode is fastest for demos/development and does not require Docker. It uses SQLite instead of PostgreSQL and runs a mock IPFS/fabric if not available.
+
+   ```bash
+# 1) Backend
+   cd backend
+copy env.example .env   # On PowerShell (Windows)
+# cp env.example .env   # On bash (Linux/Mac)
+
+# Important: ensure USE_SQLITE=true in backend/.env
+   npm install
+$env:USE_SQLITE="true"; npm run setup   # PowerShell
+# USE_SQLITE=true npm run setup          # bash
+
+# Start the API
+$env:USE_SQLITE="true"; node server.js  # PowerShell
+# USE_SQLITE=true node server.js         # bash
+
+# 2) Frontend (in a new terminal)
+   cd ../frontend
+   npm install
+npm start
+
+# Open the app
+# Frontend: http://localhost:3000
+# Backend:  http://localhost:3001/health
+   ```
+
+### Option C: Full Stack with Docker (PostgreSQL + IPFS + Fabric)
 
 1. **Start Docker services**
    ```bash
@@ -54,7 +112,7 @@ chmod +x start-system.sh
    npm run setup
    npm run dev
    ```
-
+   
 3. **Setup Frontend**
    ```bash
    cd frontend
@@ -67,6 +125,14 @@ chmod +x start-system.sh
    - Backend API: http://localhost:3001
    - API Health: http://localhost:3001/health
    - IPFS Gateway: http://localhost:8080
+
+### Default Accounts (for testing)
+
+- Admin: `admin@landregistry.com` / `admin123`
+- Government: `gov@landregistry.com` / `gov123`
+- Bank: `bank@landregistry.com` / `bank123`
+- Citizen: `citizen@example.com` / `citizen123`
+- Legal Professional: `legal@example.com` / `legal123`
 
 ## 📁 Project Structure
 
@@ -93,6 +159,8 @@ blockchain-land-registry/
 └── docs/                  # Documentation
 ```
 
+Tip: Want the fastest path? Use Option B (No Docker Dev) to get the app running in minutes.
+
 ## 🔧 Technology Stack
 
 ### Blockchain Layer
@@ -115,6 +183,10 @@ blockchain-land-registry/
 - **Axios**: HTTP client for API calls
 - **React Router**: Navigation management
 - **Formik & Yup**: Form handling and validation
+
+### Dev Convenience
+- **SQLite (Dev only)**: Local development DB (toggle with `USE_SQLITE=true`)
+- **Mock IPFS/Blockchain**: Graceful fallbacks when services are unavailable
 
 ## 👥 User Roles & Permissions
 
@@ -182,7 +254,10 @@ blockchain-land-registry/
 
 **Backend (.env):**
 ```env
-# Database
+# Development toggle (recommended when not using Docker)
+USE_SQLITE=true
+
+# PostgreSQL (used when USE_SQLITE is false)
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=land_registry
@@ -195,7 +270,7 @@ JWT_EXPIRES_IN=24h
 
 # Blockchain
 FABRIC_NETWORK_CONFIG_PATH=../fabric-network/connection-profile.json
-FABRIC_CHANNEL_NAME=mychannel
+FABRIC_CHANNEL_NAME=landregistry
 FABRIC_CHAINCODE_NAME=land-registry
 
 # IPFS
@@ -214,15 +289,8 @@ The system uses PostgreSQL with the following main tables:
 
 ## 🧪 Testing
 
-### Default Login Credentials
-
-After running the setup, use these test accounts:
-
-- **Admin**: admin@landregistry.com / admin123
-- **Government**: gov@landregistry.com / gov123  
-- **Bank**: bank@landregistry.com / bank123
-- **Citizen**: citizen@example.com / citizen123
-- **Legal Professional**: legal@example.com / legal123
+### Test Users
+Use the default accounts listed in Quick Start after running the seed/setup.
 
 ### Test Commands
 
@@ -258,6 +326,11 @@ curl http://localhost:3001/health
    docker-compose up -d postgres
    ```
 
+5. **Running Without Docker**
+   - Ensure `USE_SQLITE=true` in `backend/.env`
+   - Start backend with the same environment variable set
+   - If IPFS/Fabric are not running, the app falls back to safe mock modes for development
+
 3. **Blockchain Network Issues**
    ```bash
    # Check Fabric services
@@ -278,7 +351,7 @@ curl http://localhost:3001/health
 
 ### Service Health Checks
 
-```bash
+    ```bash
 # Backend API
 curl http://localhost:3001/health
 
